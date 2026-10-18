@@ -37,3 +37,4 @@ cmake --build build --target run
 - Is it pure NASM target code?
 - Can a classmate follow the updated setup and test documentation?
 - Is the claim of runtime correctness backed by a real QEMU run?
+    
