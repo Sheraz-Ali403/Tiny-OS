@@ -1,0 +1,9 @@
+/build/
+/out/
+*.o
+*.elf
+*.iso
+*.map
+.vscode/
+.idea/
+.DS_Store
