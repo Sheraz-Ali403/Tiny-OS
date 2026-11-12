@@ -75,7 +75,7 @@ add_custom_command(
 add_custom_target(iso DEPENDS "${KERNEL_ISO}")
 
 add_custom_target(run
-    COMMAND "${QEMU_EXECUTABLE}" -m 128M -cdrom "${KERNEL_ISO}"
+    COMMAND "${QEMU_EXECUTABLE}" -display sdl -m 128M -cdrom "${KERNEL_ISO}"
             -boot d -no-reboot -no-shutdown
     DEPENDS iso
     USES_TERMINAL

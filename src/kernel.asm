@@ -2,7 +2,8 @@
 ; No libc, no Linux syscalls, and no C runtime.
 BITS 32
 
-section .rodata
+; readonly data section
+section .rodata   
 line1 db 'Welcome to TinyOS!', 0
 line2 db '32-bit x86 Assembly kernel', 0
 line3 db 'GRUB -> NASM -> VGA: boot successful.', 0
@@ -11,9 +12,9 @@ error_line db 'ERROR: Invalid Multiboot magic.', 0
 section .text
 global kernel_main
 
-; TinyOS internal calling convention for this milestone:
-; kernel_main(uint32 boot_magic, uint32 multiboot_info_ptr)
-; [esp+4] = boot_magic, [esp+8] = info pointer (not used yet).
+
+;In C it is kernel_main(uint32 boot_magic, uint32 multiboot_info_ptr)
+; [esp+4] = boot_magic (eax), [esp+8] = info pointer (not used yet) (ebx).
 kernel_main:
     cmp dword [esp + 4], 0x2BADB002
     jne .bad_boot

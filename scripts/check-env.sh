@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# This Script checks all the required tools for building OS
 set -u
 
 required=(nasm i686-elf-ld cmake grub-file grub-mkrescue qemu-system-i386)
