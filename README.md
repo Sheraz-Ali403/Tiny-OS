@@ -13,28 +13,12 @@ TinyOS is an original, small, monolithic educational kernel—not a Linux distri
 
 ## First-time setup (Ubuntu)
 
-See **[docs/SETUP_UBUNTU.md](docs/SETUP_UBUNTU.md)**. For an already provisioned host:
-
 ```bash
 ./scripts/check-env.sh
 cmake -S . -B build
 cmake --build build --target verify
 cmake --build build --target iso
 cmake --build build --target run
-```
-
-Or use the convenience wrapper:
-
-```bash
-make run
-```
-
-The display should show:
-
-```text
-Welcome to TinyOS!
-32-bit x86 Assembly kernel
-GRUB -> NASM -> VGA: boot successful.
 ```
 
 The virtual CPU then halts (no keyboard response yet). Close QEMU using its window controls. **Do not run this ISO directly on your real laptop.**
@@ -50,44 +34,6 @@ TinyOS_Assembly_Starter/
 ├── CMakeLists.txt            # Canonical build specification
 ├── Makefile                  # Optional make frontend for CMake
 ├── scripts/check-env.sh      # Dependency and environment check
-├── docs/                     # Architecture, learning, phases, testing, etc.
-├── AGENTS.md                 # Instructions for AI coding assistants
-├── CONTRIBUTING.md          # Contributor workflow
+├── docs/                     # Important things
 └── .gitignore                # Ignore build products
 ```
-
-## Design principles
-
-1. **Assembly-only kernel.** Build scripts, docs, and CMake aren't kernel languages.
-2. **Explain the why.** Understand CPU state, instruction effects, ports, stack, and calling conventions.
-3. **Ship vertical slices.** Boot → VGA → exceptions → keyboard → shell → simple RAMFS.
-4. **No invented features.** Tests and README distinguish implemented versus planned behavior.
-5. **Keep the scope viable.** Single core, no userspace, no Linux ABI, no storage or networking in V1.
-6. **Reproducible host builds.** Build in `build/`; never commit generated binaries.
-
-## Documentation index
-
-| File | Why read it |
-|---|---|
-| [docs/START_HERE.md](docs/START_HERE.md) | First-day checklist and immediate tasks |
-| [docs/SETUP_UBUNTU.md](docs/SETUP_UBUNTU.md) | From-clean-Ubuntu host setup and cross linker |
-| [docs/BUILD_RUN_CMAKE.md](docs/BUILD_RUN_CMAKE.md) | CMake, ELF, ISO, QEMU and GDB commands |
-| [docs/LEARNING_CONCEPTS.md](docs/LEARNING_CONCEPTS.md) | Small section-by-section list of required theory |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Components, boot flow, memory, interfaces |
-| [docs/ROADMAP.md](docs/ROADMAP.md) | Six-week plan and checkpoints |
-| [docs/SCOPE_AND_REQUIREMENTS.md](docs/SCOPE_AND_REQUIREMENTS.md) | V1 scope, stretch goals, definition of done |
-| [docs/IMPLEMENTATION_CONTRACTS.md](docs/IMPLEMENTATION_CONTRACTS.md) | Register, stack, IRQ, module coding contracts |
-| [docs/SHELL_RAMFS.md](docs/SHELL_RAMFS.md) | Intended command dispatch and RAM directory model |
-| [docs/TESTING_DEBUGGING.md](docs/TESTING_DEBUGGING.md) | Checklists, faults, GDB and milestones |
-| [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Build and boot failures, including NVM `PREFIX` |
-| [docs/RISKS_AND_SECURITY.md](docs/RISKS_AND_SECURITY.md) | Risk register and explicit security limitations |
-| [docs/PRESENTATION.md](docs/PRESENTATION.md) | COAL demonstration and oral questions |
-| [docs/REFERENCES.md](docs/REFERENCES.md) | Technical references |
-| [docs/COAL_CONCEPT_TO_CODE_MAP.md](docs/COAL_CONCEPT_TO_CODE_MAP.md) | Course concepts mapped to specific instructions/modules |
-| [docs/PROJECT_PROPOSAL.md](docs/PROJECT_PROPOSAL.md) | Faculty-ready project proposal |
-| [docs/VALIDATION_STATUS.md](docs/VALIDATION_STATUS.md) | What was source-checked vs what still needs Ubuntu runtime testing |
-| [docs/phases/](docs/phases/) | Per-week task breakdowns and acceptance criteria |
-
-## Status and definition of success
-
-See [docs/SCOPE_AND_REQUIREMENTS.md](docs/SCOPE_AND_REQUIREMENTS.md) for measurable graduation criteria. The first checkpoint is deliberately limited to displaying a boot message from NASM and halting without rebooting.
