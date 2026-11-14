@@ -7,7 +7,7 @@ VGA_BUFFER EQU 0xB8000                    ;VGA text buffer for showing things to
 section .rodata   
     line1 db 'Welcome to TinyOS!', 0
     line2 db '32-bit x86 Assembly kernel', 0
-    AutherLine db 'Auther Sheraz Ali' , 0
+    AutherLine db 'Auther: Sheraz Ali' , 0
     line3 db 'GRUB -> NASM -> VGA: boot successful.', 0
     error_line db 'ERROR: Invalid Multiboot magic.', 0
 
@@ -54,6 +54,21 @@ kernel_main:
     call newLine
 
     mov al, 'E'
+    mov ah, 0x0F
+    call WriteChar
+    call newLine
+
+    mov al, 'L'
+    mov ah, 0x0F
+    call WriteChar
+    call newLine
+
+    mov al, 'L'
+    mov ah, 0x0F
+    call WriteChar
+    call newLine
+
+    mov al, 'O'
     mov ah, 0x0F
     call WriteChar
     call newLine
