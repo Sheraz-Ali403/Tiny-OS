@@ -36,12 +36,13 @@ section .bss  ;
 section .text
     global _start        ;showing "_start" label to linker
     extern kernel_main   ;kernel_main present outside of boot.asm in /src/kernel.asm
-
+    extern gdt_install
     _start:         ;imp in linker will add this label as start entry point This tells the linker which address should be recorded as the kernel's entry address.
                     ;cpu frist exe the entery addresses
         cli                            ; No IDT/IRQ handlers exist yet.
         cld                            ; String operations advance forwards.
         mov esp, stack_top             ; Use our own 16 KiB kernel stack.
+        call gdt_install       ; setting the gdt first
         and esp, 0xFFFFFFF0            ; 16-byte stack alignment.
 
         ; Leave ESP aligned to 16 bytes at the CALL instruction.

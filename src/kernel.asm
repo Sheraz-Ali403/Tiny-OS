@@ -279,7 +279,7 @@ CheckScroll:
 
 ; Backspace Procc
 Backspace:
-    cmp edi, VGA_BASE
+    cmp edi, VGA_BUFFER
     jbe .done
 
     ; mov to previous character cell

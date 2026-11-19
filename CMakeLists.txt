@@ -18,6 +18,7 @@ set(KERNEL_ISO "${CMAKE_CURRENT_BINARY_DIR}/tinyos.iso")
 set(ISO_ROOT "${CMAKE_CURRENT_BINARY_DIR}/iso-root")
 set(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/linker/linker.ld")
 set(GRUB_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/grub/grub.cfg")
+set(GDT_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/gdt.o")
 
 add_custom_command(
     OUTPUT "${BOOT_OBJECT}"
@@ -42,8 +43,8 @@ add_custom_command(
     BYPRODUCTS "${KERNEL_MAP}"
     COMMAND "${I686_ELF_LD_EXECUTABLE}" -T "${LINKER_SCRIPT}"
             "-Map=${KERNEL_MAP}" -o "${KERNEL_ELF}"
-            "${BOOT_OBJECT}" "${KERNEL_OBJECT}"
-    DEPENDS "${BOOT_OBJECT}" "${KERNEL_OBJECT}" "${LINKER_SCRIPT}"
+            "${BOOT_OBJECT}" "${KERNEL_OBJECT}" "${GDT_OBJECT}"
+    DEPENDS "${BOOT_OBJECT}" "${KERNEL_OBJECT}" "${GDT_OBJECT}" "${LINKER_SCRIPT}"
     COMMENT "Linking freestanding i686 kernel ELF"
     VERBATIM
 )
@@ -55,6 +56,14 @@ add_custom_target(verify
     COMMAND "${CMAKE_COMMAND}" -E echo "Valid Multiboot v1 kernel: ${KERNEL_ELF}"
     DEPENDS kernel
     COMMENT "Checking kernel Multiboot header"
+    VERBATIM
+)
+add_custom_command(
+    OUTPUT "${GDT_OBJECT}"
+    COMMAND "${NASM_EXECUTABLE}" -f elf32 -g -F dwarf
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gdt.asm" -o "${GDT_OBJECT}"
+    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/gdt.asm"
+    COMMENT "Assembling GDT (ELF32)"
     VERBATIM
 )
 
