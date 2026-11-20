@@ -16,10 +16,21 @@ section .rodata
     line3 db 'GRUB -> NASM -> VGA: boot successful.', 0
     error_line db 'ERROR: Invalid Multiboot magic.', 0
 
+    ;for testing the pic and irq0/1 implimentations
+timer_test_msg:
+    db "Timer ticks: ", 0
+
+keyboard_test_msg:
+    db "Keyboard scancode: ", 0
+
+
+
 section .data
     vga_attribute_wOb db 0x0F      ; White texts on black screen
 
 
+extern timer_ticks
+extern keyboard_scancode
 ; code section
 section .text
 global kernel_main
@@ -91,11 +102,45 @@ kernel_main:
     call WriteChar
     call newLine
 
-
+    ; tested exception handler and worked
     mov eax, 10
     xor edx, edx
     xor ebx, ebx
    ; div ebx         ; div by 0 exception
+
+    
+    ; ::::::::::::::;; PIC IRQ test
+.test_interrupts:
+    ; Display timer label
+    mov esi, timer_test_msg
+    call WriteString
+
+    ; Display timer counter
+    mov eax, [timer_ticks]
+    call WriteDec
+
+    call clrf
+
+    ; Display keyboard label
+    mov esi, keyboard_test_msg
+    call WriteString
+
+    ; Display keyboard scancode
+    movzx eax, byte [keyboard_scancode]
+    call WriteDec
+
+    call clrf
+
+    ; Small delay before refreshing
+    mov ecx, 0x00FFFFFF
+.delay:
+    loop .delay
+
+    ; Repeat
+    jmp .test_interrupts
+
+;::::::::::::; TEST END
+
 
 
 

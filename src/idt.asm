@@ -4,6 +4,10 @@ section .text
 
 global idt_init
 
+; tells linked that irq0 and 1 exist outside of this file
+extern irq0_stub
+extern irq1_stub
+
 ; define all macros first
 ; Create an IDT gate for a vector, it write the address of isr_X into the idt_table array in RAM
 %macro SET_IDT_GATE 2
@@ -97,6 +101,10 @@ idt_init:
     SET_IDT_GATE 29, isr_29
     SET_IDT_GATE 30, isr_30
     SET_IDT_GATE 31, isr_31
+
+    ; Set up hardware IRQ handlers timer and keyboard
+    SET_IDT_GATE 32, irq0_stub
+    SET_IDT_GATE 33, irq1_stub
 
     ; Load the IDT
     lidt [idt_descriptor]

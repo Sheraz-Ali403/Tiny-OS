@@ -20,6 +20,8 @@ set(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/linker/linker.ld")
 set(GRUB_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/grub/grub.cfg")
 set(GDT_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/gdt.o")
 set(IDT_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/idt.o")
+set(PIC_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/pic.o")
+set(IRQ_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/irq.o")
 
 add_custom_command(
     OUTPUT "${BOOT_OBJECT}"
@@ -44,8 +46,8 @@ add_custom_command(
     BYPRODUCTS "${KERNEL_MAP}"
     COMMAND "${I686_ELF_LD_EXECUTABLE}" -T "${LINKER_SCRIPT}"
             "-Map=${KERNEL_MAP}" -o "${KERNEL_ELF}"
-            "${BOOT_OBJECT}" "${KERNEL_OBJECT}" "${GDT_OBJECT}" "${IDT_OBJECT}"
-    DEPENDS "${BOOT_OBJECT}" "${KERNEL_OBJECT}" "${GDT_OBJECT}" "${IDT_OBJECT}" "${LINKER_SCRIPT}"
+            "${BOOT_OBJECT}" "${KERNEL_OBJECT}" "${GDT_OBJECT}" "${IDT_OBJECT}" "${PIC_OBJECT}" "${IRQ_OBJECT}"
+    DEPENDS "${BOOT_OBJECT}" "${KERNEL_OBJECT}" "${GDT_OBJECT}" "${IDT_OBJECT}" "${PIC_OBJECT}" "${IRQ_OBJECT}" "${LINKER_SCRIPT}"
     COMMENT "Linking freestanding i686 kernel ELF"
     VERBATIM
 )
@@ -74,6 +76,24 @@ add_custom_command(
             -o "${IDT_OBJECT}"
     DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/idt.asm"
     COMMENT "Assembling IDT (ELF32)"
+    VERBATIM
+)
+add_custom_command(
+    OUTPUT "${PIC_OBJECT}"
+    COMMAND "${NASM_EXECUTABLE}" -f elf32 -g -F dwarf
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/pic.asm"
+            -o "${PIC_OBJECT}"
+    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/pic.asm"
+    COMMENT "Assembling PIC (ELF32)"
+    VERBATIM
+)
+add_custom_command(
+    OUTPUT "${IRQ_OBJECT}"
+    COMMAND "${NASM_EXECUTABLE}" -f elf32 -g -F dwarf
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/irq.asm"
+            -o "${IRQ_OBJECT}"
+    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/irq.asm"
+    COMMENT "Assembling IRQ handlers (ELF32)"
     VERBATIM
 )
 
