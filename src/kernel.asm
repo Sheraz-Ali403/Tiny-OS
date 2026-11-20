@@ -92,6 +92,12 @@ kernel_main:
     call newLine
 
 
+    mov eax, 10
+    xor edx, edx
+    xor ebx, ebx
+   ; div ebx         ; div by 0 exception
+
+
 
     ret                            ; imp for not going flow to label/funcs
 
