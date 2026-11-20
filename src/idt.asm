@@ -25,7 +25,7 @@ extern irq1_stub
     mov [idt_table + eax + 6], dx
 %endmacro
 
-;T hese macro makes labels of all isr_x 
+;These macro makes labels of all isr_x 
 ; Exceptions without an error code
 %macro ISR_NOERR_CODE 1
 isr_%1:

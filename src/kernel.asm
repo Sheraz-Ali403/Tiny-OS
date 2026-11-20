@@ -106,7 +106,7 @@ kernel_main:
     mov eax, 10
     xor edx, edx
     xor ebx, ebx
-   ; div ebx         ; div by 0 exception
+    div ebx         ; div by 0 exception
 
     
     ; ::::::::::::::;; PIC IRQ test
