@@ -1,9 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
-# LANGUAGES NONE deliberately: TinyOS is 100% NASM Assembly, with no C/C++.
 project(TinyOS VERSION 0.1.0 LANGUAGES NONE)
 
-# CMake orchestrates external NASM + i686-elf-ld tools. It is not our compiler.
 find_program(NASM_EXECUTABLE NAMES nasm REQUIRED)
 find_program(I686_ELF_LD_EXECUTABLE NAMES i686-elf-ld REQUIRED)
 find_program(GRUB_MKRESCUE_EXECUTABLE NAMES grub-mkrescue REQUIRED)
@@ -11,20 +9,14 @@ find_program(GRUB_FILE_EXECUTABLE NAMES grub-file REQUIRED)
 find_program(QEMU_EXECUTABLE NAMES qemu-system-i386 REQUIRED)
 
 set(BOOT_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/boot.o")
-set(KERNEL_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/kernel.o")
 set(KERNEL_ELF "${CMAKE_CURRENT_BINARY_DIR}/kernel.elf")
 set(KERNEL_MAP "${CMAKE_CURRENT_BINARY_DIR}/kernel.map")
 set(KERNEL_ISO "${CMAKE_CURRENT_BINARY_DIR}/tinyos.iso")
 set(ISO_ROOT "${CMAKE_CURRENT_BINARY_DIR}/iso-root")
 set(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/linker/linker.ld")
 set(GRUB_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/grub/grub.cfg")
-set(GDT_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/gdt.o")
-set(IDT_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/idt.o")
-set(PIC_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/pic.o")
-set(IRQ_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/irq.o")
-set(KEYBOARD_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/keyboard.o")
 
-
+# 1. Assemble boot.asm
 add_custom_command(
     OUTPUT "${BOOT_OBJECT}"
     COMMAND "${NASM_EXECUTABLE}" -f elf32 -g -F dwarf
@@ -34,22 +26,36 @@ add_custom_command(
     VERBATIM
 )
 
-add_custom_command(
-    OUTPUT "${KERNEL_OBJECT}"
-    COMMAND "${NASM_EXECUTABLE}" -f elf32 -g -F dwarf
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/kernel.asm" -o "${KERNEL_OBJECT}"
-    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/kernel.asm"
-    COMMENT "Assembling kernel (ELF32)"
-    VERBATIM
-)
+# 2. Automatically find and assemble every .asm file in src/ (excluding timer.asm)
+file(GLOB SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.asm")
+list(REMOVE_ITEM SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/timer.asm")
 
+set(ALL_OBJECTS "${BOOT_OBJECT}")
+
+foreach(SRC_FILE ${SRC_FILES})
+    get_filename_component(FILE_NAME "${SRC_FILE}" NAME_WE)
+    set(OBJ_FILE "${CMAKE_CURRENT_BINARY_DIR}/${FILE_NAME}.o")
+
+    add_custom_command(
+        OUTPUT "${OBJ_FILE}"
+        COMMAND "${NASM_EXECUTABLE}" -f elf32 -g -F dwarf
+                "${SRC_FILE}" -o "${OBJ_FILE}"
+        DEPENDS "${SRC_FILE}"
+        COMMENT "Assembling ${FILE_NAME}.asm (ELF32)"
+        VERBATIM
+    )
+
+    list(APPEND ALL_OBJECTS "${OBJ_FILE}")
+endforeach()
+
+# 3. Link everything into kernel.elf
 add_custom_command(
     OUTPUT "${KERNEL_ELF}"
     BYPRODUCTS "${KERNEL_MAP}"
     COMMAND "${I686_ELF_LD_EXECUTABLE}" -T "${LINKER_SCRIPT}"
             "-Map=${KERNEL_MAP}" -o "${KERNEL_ELF}"
-            "${BOOT_OBJECT}" "${KERNEL_OBJECT}" "${GDT_OBJECT}" "${IDT_OBJECT}" "${PIC_OBJECT}" "${IRQ_OBJECT}" "${KEYBOARD_OBJECT}"
-    DEPENDS "${BOOT_OBJECT}" "${KERNEL_OBJECT}" "${GDT_OBJECT}" "${IDT_OBJECT}" "${PIC_OBJECT}" "${IRQ_OBJECT}" "${KEYBOARD_OBJECT}" "${LINKER_SCRIPT}"
+            ${ALL_OBJECTS}
+    DEPENDS ${ALL_OBJECTS} "${LINKER_SCRIPT}"
     COMMENT "Linking freestanding i686 kernel ELF"
     VERBATIM
 )
@@ -61,49 +67,6 @@ add_custom_target(verify
     COMMAND "${CMAKE_COMMAND}" -E echo "Valid Multiboot v1 kernel: ${KERNEL_ELF}"
     DEPENDS kernel
     COMMENT "Checking kernel Multiboot header"
-    VERBATIM
-)
-add_custom_command(
-    OUTPUT "${GDT_OBJECT}"
-    COMMAND "${NASM_EXECUTABLE}" -f elf32 -g -F dwarf
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gdt.asm" -o "${GDT_OBJECT}"
-    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/gdt.asm"
-    COMMENT "Assembling GDT (ELF32)"
-    VERBATIM
-)
-add_custom_command(
-    OUTPUT "${IDT_OBJECT}"
-    COMMAND "${NASM_EXECUTABLE}" -f elf32 -g -F dwarf
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/idt.asm"
-            -o "${IDT_OBJECT}"
-    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/idt.asm"
-    COMMENT "Assembling IDT (ELF32)"
-    VERBATIM
-)
-add_custom_command(
-    OUTPUT "${PIC_OBJECT}"
-    COMMAND "${NASM_EXECUTABLE}" -f elf32 -g -F dwarf
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/pic.asm"
-            -o "${PIC_OBJECT}"
-    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/pic.asm"
-    COMMENT "Assembling PIC (ELF32)"
-    VERBATIM
-)
-add_custom_command(
-    OUTPUT "${IRQ_OBJECT}"
-    COMMAND "${NASM_EXECUTABLE}" -f elf32 -g -F dwarf
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/irq.asm"
-            -o "${IRQ_OBJECT}"
-    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/irq.asm"
-    COMMENT "Assembling IRQ handlers (ELF32)"
-    VERBATIM
-)
-add_custom_command(
-    OUTPUT "${KEYBOARD_OBJECT}"
-    COMMAND "${NASM_EXECUTABLE}" -f elf32
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/keyboard.asm"
-            -o "${KEYBOARD_OBJECT}"
-    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/keyboard.asm"
     VERBATIM
 )
 
