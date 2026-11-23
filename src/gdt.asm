@@ -36,17 +36,17 @@ align 8
 
 gdt_start:
     ; 8 bytes 
-    ; Null descriptor
+    ; Null descriptor index 1
     dq 0x0000000000000000
 
-    ; Kernel code segment and selector x08
+    ; Kernel code segment and selector x08 index2
     dq 0x00CF9A000000FFFF
 
-    ; Kernel data segment
+    ;Index 3 Kernel data segment (all DS, ES, etc segments will define by using this info by linker)
     dq 0x00CF92000000FFFF
 gdt_end:
 
 ; 6 bytes 
 gdt_descriptor:
-    dw gdt_end - gdt_start -1 ; bits 0-15 shows limit  
-    dd gdt_start               ; 16-47 shows base
+    dw gdt_end - gdt_start -1 ; bits 0-15 shows limit  (total byte size of gdt)
+    dd gdt_start               ; 16-47 shows base       (where gdt is being started)

@@ -22,6 +22,8 @@ set(GDT_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/gdt.o")
 set(IDT_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/idt.o")
 set(PIC_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/pic.o")
 set(IRQ_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/irq.o")
+set(KEYBOARD_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/keyboard.o")
+
 
 add_custom_command(
     OUTPUT "${BOOT_OBJECT}"
@@ -46,8 +48,8 @@ add_custom_command(
     BYPRODUCTS "${KERNEL_MAP}"
     COMMAND "${I686_ELF_LD_EXECUTABLE}" -T "${LINKER_SCRIPT}"
             "-Map=${KERNEL_MAP}" -o "${KERNEL_ELF}"
-            "${BOOT_OBJECT}" "${KERNEL_OBJECT}" "${GDT_OBJECT}" "${IDT_OBJECT}" "${PIC_OBJECT}" "${IRQ_OBJECT}"
-    DEPENDS "${BOOT_OBJECT}" "${KERNEL_OBJECT}" "${GDT_OBJECT}" "${IDT_OBJECT}" "${PIC_OBJECT}" "${IRQ_OBJECT}" "${LINKER_SCRIPT}"
+            "${BOOT_OBJECT}" "${KERNEL_OBJECT}" "${GDT_OBJECT}" "${IDT_OBJECT}" "${PIC_OBJECT}" "${IRQ_OBJECT}" "${KEYBOARD_OBJECT}"
+    DEPENDS "${BOOT_OBJECT}" "${KERNEL_OBJECT}" "${GDT_OBJECT}" "${IDT_OBJECT}" "${PIC_OBJECT}" "${IRQ_OBJECT}" "${KEYBOARD_OBJECT}" "${LINKER_SCRIPT}"
     COMMENT "Linking freestanding i686 kernel ELF"
     VERBATIM
 )
@@ -94,6 +96,14 @@ add_custom_command(
             -o "${IRQ_OBJECT}"
     DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/irq.asm"
     COMMENT "Assembling IRQ handlers (ELF32)"
+    VERBATIM
+)
+add_custom_command(
+    OUTPUT "${KEYBOARD_OBJECT}"
+    COMMAND "${NASM_EXECUTABLE}" -f elf32
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/keyboard.asm"
+            -o "${KEYBOARD_OBJECT}"
+    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/keyboard.asm"
     VERBATIM
 )
 

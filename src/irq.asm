@@ -1,5 +1,6 @@
-
 [BITS 32]
+; present in keyboard.asm
+extern keyboard_handle_scancode
 
 ; PIC ports
 %define PIC1_COMMAND    0x20
@@ -8,19 +9,20 @@
 
 ; PIT ports
 %define PIT_COMMAND     0x43
-%define PIT_CHANNEL0    0x40
+%define PIT_CHANNEL0    0x40  ;using channel0 SystemTimer
 
 ; IRQ vector identifiers
 %define IRQ_TIMER       0
 %define IRQ_KEYBOARD    1
 
-; PIT configuration  for setting the ticks
+; PIT configuration  for setting the ticks to 0.01 sec/100Hz
 %define PIT_DIVISOR     11932
 
 global irq0_stub
 global irq1_stub
 global pit_init
 global pic_enable_irq01
+
 
 global timer_ticks
 global keyboard_scancode
@@ -44,7 +46,7 @@ irq_common:
     push fs
     push gs
 
-    ; Load kernel data segments
+    ; Load kernel data segments and giving permission of ring 0
     mov ax, 0x10
     mov ds, ax
     mov es, ax
@@ -68,16 +70,18 @@ irq_common:
 
 .timer_irq:
     inc dword [timer_ticks]
+    ;After this, timer driver will have to work
     jmp .send_eoi
 
 
 .keyboard_irq:
-    in al, 0x60
-    mov [keyboard_scancode], al
+    in al, 0x60      ;60  Keyboard Data Port (reads the pressed key scancode)
+    ;mov [keyboard_scancode], al
+    call keyboard_handle_scancode
 
-
+; tells Master PIC for the next intrupt
 .send_eoi:
-    ; Acknowledge master PIC
+    ;sets In Service Flag to 0 so new intrupt can now come
     mov al, 0x20
     out PIC1_COMMAND, al
 
@@ -99,6 +103,7 @@ pit_init:
     pushad
 
     ; Configure channel 0, mode 3
+    ;0x36 - -- 0011 0110     ch0 00(2), Access ModeLow/HighByte11(2), mode2_rateGen 010(3), Num format Hex so last bit 0
     mov al, 0x36
     out PIT_COMMAND, al
 
@@ -119,7 +124,7 @@ pic_enable_irq01:
     push ax
     push dx
 
-    ; Unmask master IRQ0 and IRQ1
+    ; Unmask master IRQ0 and IRQ1 only
     mov dx, PIC1_DATA
     mov al, 0xFC
     out dx, al
@@ -135,10 +140,9 @@ pic_enable_irq01:
 
 
 section .bss
-
 align 4
 
-; Number of timer interrupts received
+; Number of timer interrupts received, Watch
 timer_ticks:
     resd 1
 

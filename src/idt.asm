@@ -4,12 +4,13 @@ section .text
 
 global idt_init
 
+; for PIC
 ; tells linked that irq0 and 1 exist outside of this file
 extern irq0_stub
 extern irq1_stub
 
 ; define all macros first
-; Create an IDT gate for a vector, it write the address of isr_X into the idt_table array in RAM
+; Create an IDT gate(table) for a vector, it write the address of isr_X into the idt_table array in RAM
 %macro SET_IDT_GATE 2
     mov eax, %1
     shl eax, 3    ; eax holds entry isr_index(vector)* 8
@@ -43,8 +44,6 @@ isr_%1:
 %endmacro
 
 
-
-
 idt_init:
     pushad
     cli
@@ -69,6 +68,7 @@ idt_init:
     loop .fill_idt
 
     ; Set up the CPU exception handlers
+    ; 2 arguments %1, %2
     SET_IDT_GATE 0, isr_0
     SET_IDT_GATE 1, isr_1
     SET_IDT_GATE 2, isr_2
@@ -119,7 +119,7 @@ isr_default:
     jmp isr_common
 
 
-; Exceptions without an error code
+; Exceptions ISR handler with and without an error code
 ISR_NOERR_CODE 0
 ISR_NOERR_CODE 1
 ISR_NOERR_CODE 2
@@ -157,7 +157,7 @@ ISR_NOERR_CODE 31
 ; Handle exceptions no extra defined exception handling just showing the kernel panic screen
 isr_common:
     cli
-    pushad
+    pushad 
 
     ; Save the exception details
     ; on 32 stack has index num (isr_num), 36 has error code, 40 has the eip just before the exception occurred
@@ -167,6 +167,7 @@ isr_common:
     mov eax,[esp + 36]
     mov [last_exception_error], eax
 
+    ;CPU auto pushed the EIP when Intrupt calls
     mov eax,[esp + 40]
     mov [last_exception_eip], eax
 
@@ -180,8 +181,6 @@ isr_common:
 
 
 ; display kernal panic vga proc designed by GPT
-
-
 panic_screen:
     mov ax, 0x10
     mov ds, ax
@@ -420,7 +419,7 @@ panic_good_luck:
 section .rodata
 
 panic_title:
-    db "TINYOS // CORE PANIC", 0
+    db "TINYOS : CORE PANIC", 0
 
 panic_message:
     db "Well, that wasn't supposed to happen.", 0

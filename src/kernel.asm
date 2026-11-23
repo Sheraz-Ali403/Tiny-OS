@@ -106,46 +106,9 @@ kernel_main:
     mov eax, 10
     xor edx, edx
     xor ebx, ebx
-    div ebx         ; div by 0 exception
+    ;div ebx         ; div by 0 exception
 
-    
-    ; ::::::::::::::;; PIC IRQ test
-.test_interrupts:
-    ; Display timer label
-    mov esi, timer_test_msg
-    call WriteString
-
-    ; Display timer counter
-    mov eax, [timer_ticks]
-    call WriteDec
-
-    call clrf
-
-    ; Display keyboard label
-    mov esi, keyboard_test_msg
-    call WriteString
-
-    ; Display keyboard scancode
-    movzx eax, byte [keyboard_scancode]
-    call WriteDec
-
-    call clrf
-
-    ; Small delay before refreshing
-    mov ecx, 0x00FFFFFF
-.delay:
-    loop .delay
-
-    ; Repeat
-    jmp .test_interrupts
-
-;::::::::::::; TEST END
-
-
-
-
-    ret                            ; imp for not going flow to label/funcs
-
+    ret                           
 
 
 
@@ -194,8 +157,8 @@ clrf:
     sub eax, 0xB8000
 
     xor edx, edx
-    mov ecx, 160
-    div ecx                          ; (edx:eax)/ecx ->  edx reminder(col/offset), eax Quotient (row Number)
+    mov ecx,160
+    div ecx       ; (edx:eax)/ecx ->  edx reminder(col/offset), eax Quotient (row Number)
 
     inc eax
     imul eax, 160
@@ -311,7 +274,7 @@ WriteDec:
     loop .print
 
 .done:
-    mov ah, [vga_attribute_wOb]
+    ;mov ah, [vga_attribute_wOb]
 
     pop edx
     pop ecx
