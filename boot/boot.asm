@@ -41,6 +41,7 @@ section .text
     extern pic_init
     extern pit_init
     extern pic_enable_irq01
+    extern keyboard_init
 
 
     _start:         ;imp in linker will add this label as start entry point This tells the linker which address should be recorded as the kernel's entry address.
@@ -53,6 +54,7 @@ section .text
         call pic_init
         call pit_init
         call pic_enable_irq01
+        call keyboard_init
         sti
 
 

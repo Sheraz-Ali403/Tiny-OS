@@ -31,6 +31,14 @@ section .data
 
 extern timer_ticks
 extern keyboard_scancode
+
+extern keyboard_init
+extern keyboard_getchar
+extern keyboard_line_process
+extern keyboard_line_reset
+extern keyboard_line_buffer
+extern keyboard_line_length
+
 ; code section
 section .text
 global kernel_main
@@ -108,6 +116,9 @@ kernel_main:
     xor ebx, ebx
     ;div ebx         ; div by 0 exception
 
+    call clrf
+    ;for keyboard inputs
+    call keyboard_input_loop
     ret                           
 
 
@@ -309,3 +320,63 @@ Backspace:
     ret
 
 
+; Keyboard input loop
+keyboard_input_loop:
+    push ebx
+
+.keyboard_loop:
+    ; Read one character safely.
+    pushfd
+    cli
+    call keyboard_getchar
+    setc bl
+    popfd
+
+    ; Check whether buffer is empty.
+    test bl, bl
+    jnz .keyboard_loop
+
+    ; Process the received character.
+    call keyboard_line_process
+
+    cmp al, 1
+    je .print_character
+
+    cmp al, 2
+    je .delete_character
+
+    cmp al, 3
+    je .enter_pressed
+
+    jmp .keyboard_loop
+
+.print_character:
+    ; Get the last character from the line buffer.
+    movzx ebx, byte [keyboard_line_length]
+    dec ebx
+    mov al, [keyboard_line_buffer + ebx]
+
+    mov ah, [vga_attribute_wOb]
+    call WriteChar
+    call CheckScroll
+
+    jmp .keyboard_loop
+
+.delete_character:
+    ; Remove the last character from VGA.
+    call Backspace
+    jmp .keyboard_loop
+
+.enter_pressed:
+    ; Move to the beginning of the next row.
+    call clrf
+    call CheckScroll
+
+    ; The completed line is available in keyboard_line_buffer
+    ; Process it here when we implement commands.
+
+    call keyboard_line_reset
+    jmp .keyboard_loop
+
+    pop ebx
+    ret
