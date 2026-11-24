@@ -12,7 +12,7 @@ VGA_END EQU 0xB8FA0
 section .rodata   
     line1 db 'Welcome to TinyOS!', 0
     line2 db '32-bit x86 Assembly kernel', 0
-    AutherLine db 'By Sheraz Ali' , 0
+    AutherLine db 'By Sheraz Ali, Ahmed Shaikh, Hamza Raza' , 0
     line3 db 'GRUB -> NASM -> VGA: boot successful.', 0
     error_line db 'ERROR: Invalid Multiboot magic.', 0
 
@@ -29,6 +29,12 @@ section .data
     vga_attribute_wOb db 0x0F      ; White texts on black screen
 
 
+extern gdt_install
+extern idt_init
+extern pic_init
+extern pit_init
+extern pic_enable_irq01
+
 extern timer_ticks
 extern keyboard_scancode
 
@@ -38,6 +44,12 @@ extern keyboard_line_process
 extern keyboard_line_reset
 extern keyboard_line_buffer
 extern keyboard_line_length
+
+extern paging_init
+extern fs_init
+extern shell_init
+extern shell_execute
+extern shell_prompt_end
 
 ; code section
 section .text
@@ -49,6 +61,21 @@ global kernel_main
 kernel_main:
     cmp dword [esp + 4], 0x2BADB002
     jne .bad_boot
+
+    ; initialize core CPU tables and hardware controllers
+    call gdt_install
+    call idt_init
+    call pic_init
+    call pit_init
+    call keyboard_init
+    call pic_enable_irq01
+
+    ; initialize paging and in-memory file system
+    call paging_init
+    call fs_init
+
+    ; enable hardware interrupts so IRQ0 (timer) and IRQ1 (keyboard) fire
+    sti
 
     mov edi, VGA_BUFFER
     call clrf
@@ -117,6 +144,8 @@ kernel_main:
     ;div ebx         ; div by 0 exception
 
     call clrf
+    call CheckScroll
+    call shell_init
     ;for keyboard inputs
     call keyboard_input_loop
     ret                           
@@ -304,7 +333,7 @@ CheckScroll:
 
 ; Backspace Procc
 Backspace:
-    cmp edi, VGA_BUFFER
+    cmp edi, [shell_prompt_end]
     jbe .done
 
     ; mov to previous character cell
@@ -334,8 +363,13 @@ keyboard_input_loop:
 
     ; Check whether buffer is empty.
     test bl, bl
-    jnz .keyboard_loop
+    jz .got_char
 
+    ; Halt CPU until next interrupt so QEMU stays responsive.
+    hlt
+    jmp .keyboard_loop
+
+.got_char:
     ; Process the received character.
     call keyboard_line_process
 
@@ -374,6 +408,7 @@ keyboard_input_loop:
 
     ; The completed line is available in keyboard_line_buffer
     ; Process it here when we implement commands.
+    call shell_execute
 
     call keyboard_line_reset
     jmp .keyboard_loop
