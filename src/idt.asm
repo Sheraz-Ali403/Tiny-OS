@@ -403,7 +403,7 @@ panic_not_supposed:
     db "Well, that wasn't supposed to happen.", 0
 
 panic_congratulations:
-    db "Congratulations! You maybe broke your kernel.", 0
+    db "Congratulations! You maybe broke your system.", 0
 
 panic_left:
     db "The kernel has left the conversation.", 0

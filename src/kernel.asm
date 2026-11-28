@@ -130,12 +130,7 @@ kernel_main:
 
     ;call ClearScreen   ; for test and worked
    ; call ScrollScreen   ; for test and worked
-    ;call ScrollScreen   ;for test and worked
-
-    mov al, 'O'
-    mov ah, 0x0F
-    call WriteChar
-    call newLine
+    ;call ScrollScreen   git;for test and worked
 
     ; tested exception handler and worked
     mov eax, 10

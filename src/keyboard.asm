@@ -45,7 +45,7 @@ keyboard_init:
     mov edi, keyboard_key_state
     mov ecx, 128
     xor eax, eax
-    rep stosb
+    rep stosb   ;al to edi
 
     mov edi, keyboard_extended_key_state
     mov ecx, 128
